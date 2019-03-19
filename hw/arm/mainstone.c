@@ -12,6 +12,7 @@
  * GNU GPL, version 2 or (at your option) any later version.
  */
 #include "qemu/osdep.h"
+#include "qemu/error-report.h"
 #include "qapi/error.h"
 #include "hw/hw.h"
 #include "hw/arm/pxa.h"
@@ -20,7 +21,6 @@
 #include "hw/devices.h"
 #include "hw/boards.h"
 #include "hw/block/flash.h"
-#include "sysemu/block-backend.h"
 #include "hw/sysbus.h"
 #include "exec/address-spaces.h"
 #include "sysemu/qtest.h"
@@ -143,18 +143,17 @@ static void mainstone_common_init(MemoryRegion *address_space_mem,
             if (qtest_enabled()) {
                 break;
             }
-            fprintf(stderr, "Two flash images must be given with the "
-                    "'pflash' parameter\n");
+            error_report("Two flash images must be given with the "
+                         "'pflash' parameter");
             exit(1);
         }
 
-        if (!pflash_cfi01_register(mainstone_flash_base[i], NULL,
+        if (!pflash_cfi01_register(mainstone_flash_base[i],
                                    i ? "mainstone.flash1" : "mainstone.flash0",
                                    MAINSTONE_FLASH,
                                    blk_by_legacy_dinfo(dinfo),
-                                   sector_len, MAINSTONE_FLASH / sector_len,
-                                   4, 0, 0, 0, 0, be)) {
-            fprintf(stderr, "qemu: Error registering flash memory.\n");
+                                   sector_len, 4, 0, 0, 0, 0, be)) {
+            error_report("Error registering flash memory");
             exit(1);
         }
     }
